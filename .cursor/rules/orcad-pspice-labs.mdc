@@ -8,9 +8,10 @@ alwaysApply: true
 ## Project paths
 - Active project: `C:\Users\lance\AppData\Roaming\SPB_Data\cdssetup\workspace\projects\orcadcpmtest\1\`
 - Design: `orcadcpmtest.dsn` — use the `\1\` folder only
-- MCP: `user-OrCAD-Capture` → `server.py` (persistent socket, `execute_tcl` / `execute_tcl_batch` / `capture_ping`)
+- MCP: `user-OrCAD-Capture` → `server.py`; MATLAB → `matlab_mcp.py`
 - Sim helpers: `sim_lib.py` (write `.sim`, `psp_cmd` run, parse `.out`/`.csd`, plot)
 - Pin offsets: `pin_offsets.json` + `placement_lib.py`
+- Labs / results: `labs/labN_pages`, `labs/lab3_results/`; scripts in `scripts/`
 
 ## Capture Tcl — do
 - One small command at a time (or `execute_tcl_batch` with ~50–100 ms delay); always trailing `\n`

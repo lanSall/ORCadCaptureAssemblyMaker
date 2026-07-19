@@ -1,11 +1,16 @@
 [project]
 name = "tcl-mcp-server"
-version = "0.1.0"
-description = "MCP server that executes TCL commands over TCP on localhost:9020"
+version = "0.2.0"
+description = "OrCAD Capture Tcl MCP + PSpice helpers + MATLAB Engine MCP"
 requires-python = ">=3.10"
 dependencies = [
     "mcp>=1.0.0",
 ]
+
+[project.optional-dependencies]
+matlab = ["matlabengine>=24.2.0"]
+docs = ["python-docx>=1.0.0"]
+plot = ["matplotlib>=3.7.0"]
 
 [project.scripts]
 tcl-mcp-server = "server:mcp"
@@ -15,4 +20,4 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-py-modules = ["server"]
+py-modules = ["server", "matlab_mcp", "sim_lib", "placement_lib"]

@@ -12,7 +12,7 @@ PDF_PATH = (
     r"c:\Users\lance\OneDrive\College\Fall2025Undergrad\ECEN3314_Devices_Documents"
     r"\LAB Documents\LAB files\ECEN3314_Lab5_Voltage_Doubler.pdf"
 )
-OUT_DIR = Path(r"C:\Users\lance\tcl-mcp-server\lab5_pages")
+OUT_DIR = Path(r"C:\Users\lance\tcl-mcp-server\labs\lab5_pages")
 EMBED_DIR = OUT_DIR / "embedded"
 ZOOM = 2.5
 

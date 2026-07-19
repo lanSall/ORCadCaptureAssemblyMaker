@@ -1,0 +1,13 @@
+* Lab3 6.4 full-wave bridge
+.lib "C:/Users/lance/tcl-mcp-server/lab3_results/1N4007.lib"
+VIN NINP NINN SIN(0 3 50 0 0 0)
+D1 NINP NA 1N4007
+D2 NB NINP 1N4007
+D3 NINN NA 1N4007
+D4 NB NINN 1N4007
+RL NA NB 10k
+RB NB 0 1m
+.TRAN 20u 40m 0 20u
+.PRINT TRAN V([NINP]) V([NINN]) V([NA]) V([NB])
+.PROBE/CSDF V([NINP]) V([NINN]) V([NA]) V([NB])
+.END

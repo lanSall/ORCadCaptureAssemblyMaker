@@ -1,0 +1,37 @@
+******
+* Spice Model
+* Item: 1N4007
+* Date: 6/2/10
+* Revision History: A
+* ==========================================================
+* This model was developed by: 
+* Central Semiconductor Corp.
+* 145 Adams Avenue
+* Hauppauge, NY 11788
+*
+* These models are subject to change without notice.
+* Users may not directly or indirectly re-sell or 
+* re-distribute this model. This model may not 
+* be modified, or altered without the consent of Central Semiconductor Corp. 
+*
+* For more information on this model contact
+* Central Semiconductor Corp. at:
+* (631) 435-1110 or Engineering@centralsemi.com
+* http://www.centralsemi.com
+* ==========================================================
+******
+*SRC=1N4007;1N4007;Diodes;Rectifier;400V 1.00A 1µs CS CS
+.MODEL 1N4007 D (
++ IS=419.73E-12
++ N=1.6026
++ RS=.11128
++ IKF=.93761
++ CJO=26.496E-12
++ M=.34952
++ VJ=.3905
++ ISR=2.5620E-9
++ NR=4.9950
++ BV=400.01
++ IBV=1.4369E-3
++ TT=1.4427E-6 )
+******

@@ -270,7 +270,7 @@ def write_ac_sim(
     path = out_dir / f"{name}.sim"
     notes = notes or f"AC DEC {s.points_per_decade} {s.fstart} {s.fstop}"
     # Reuse Lab2_AC structure: Analysis 0 off, Analysis 1 on
-    base = write_tran_sim(name, out_dir, TranSettings(), notes)
+    base = write_tran_sim(name, out_dir, settings=TranSettings(), notes=notes)
     text = base.read_text(encoding="utf-8")
     text = text.replace("@Analysis: 0 1", "@Analysis: 0 0", 1)
     text = text.replace("@Analysis: 1 0", "@Analysis: 1 1", 1)
@@ -499,7 +499,11 @@ def parse_print_tran(out_path: Path) -> dict[str, list[float]]:
         if re.search(r"\bTIME\b", line, re.I) and re.search(r"\bV\(", line, re.I):
             headers = re.findall(r"[A-Za-z0-9_().*/+-]+", line)
             # Keep TIME and V(...) columns
-            headers = [h for h in headers if h.upper() == "TIME" or h.upper().startswith("V(")]
+            headers = [
+                h
+                for h in headers
+                if h.upper() in ("TIME", "FREQ", "FREQUENCY") or h.upper().startswith("V(")
+            ]
             if len(headers) >= 2:
                 header_idx = i
                 break

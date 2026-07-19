@@ -1,1 +1,4 @@
 mcp>=1.0.0
+# matlab_mcp.py needs matlabengine on the Python that Cursor launches
+# (install from MATLAB: cd(fullfile(matlabroot,'extern','engines','python')); system('python -m pip install .')
+# or: pip install matlabengine==24.2.2 for R2024b)

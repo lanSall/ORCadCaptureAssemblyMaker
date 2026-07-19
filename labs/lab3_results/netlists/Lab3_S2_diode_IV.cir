@@ -1,0 +1,9 @@
+* Lab3 6.1 Fig9 diode I-V
+.lib "C:/Users/lance/tcl-mcp-server/lab3_results/1N4148.lib"
+VIN VIN 0 DC 0
+D1 VIN NVO 1N4148
+R1 NVO 0 1k
+.DC VIN 0 5 0.01
+.PRINT DC V([VIN]) V([NVO]) I(VIN)
+.PROBE/CSDF V([VIN]) V([NVO]) I(VIN)
+.END

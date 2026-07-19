@@ -6,3 +6,15 @@ venv/
 dist/
 build/
 .env
+
+# PSpice / Capture scratch outputs
+*.out
+*.csd
+*.mif
+*.ind
+**/extract_output.txt
+**/_tabtry*.png
+
+# One-off scratch helpers (leading underscore)
+labs/**/ref_schematics/_*.py
+labs/**/ref_schematics/_*.txt

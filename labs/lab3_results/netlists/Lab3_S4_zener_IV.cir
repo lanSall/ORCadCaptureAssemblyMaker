@@ -1,0 +1,9 @@
+* Lab3 6.2 Fig10 Zener
+.lib "C:/Users/lance/tcl-mcp-server/lab3_results/1N5231_model.lib"
+VIN VIN 0 DC 0
+R1 VIN NCATH 2k
+DZ 0 NCATH D1N5231
+.DC VIN 0 15 0.05
+.PRINT DC V([VIN]) V([NCATH]) I(VIN)
+.PROBE/CSDF V([VIN]) V([NCATH]) I(VIN)
+.END

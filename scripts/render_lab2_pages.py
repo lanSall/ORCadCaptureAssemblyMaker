@@ -3,7 +3,7 @@ import re
 import os
 
 pdf_path = r"c:\Users\lance\OneDrive\College\Fall2025Undergrad\ECEN3314_Devices_Documents\LAB Documents\LAB files\ECEN3314_Lab2_OpAmp_updated_saif.pdf"
-out_dir = r"C:\Users\lance\tcl-mcp-server\lab2_pages"
+out_dir = r"C:\Users\lance\tcl-mcp-server\labs\lab2_pages"
 
 doc = fitz.open(pdf_path)
 print(f"PDF has {doc.page_count} pages")

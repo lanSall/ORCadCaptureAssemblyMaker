@@ -11,7 +11,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 PDF_PATH = r"c:\Users\lance\OneDrive\College\Fall2025Undergrad\ECEN3314_Devices_Documents\LAB Documents\LAB files\ECEN3314_Lab8_CS_Amplifier.pdf"
-OUT_DIR = Path(r"C:\Users\lance\tcl-mcp-server\lab8_pages")
+OUT_DIR = Path(r"C:\Users\lance\tcl-mcp-server\labs\lab8_pages")
 EMBED_DIR = OUT_DIR / "embedded"
 ZOOM = 2.5
 
