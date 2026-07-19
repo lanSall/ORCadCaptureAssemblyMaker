@@ -1,0 +1,38 @@
+{
+  "_doc": "Pin hotspot offsets in inches relative to PlacePart origin (rot=0, mirror=0). Wire tip = origin + offset. After SetRotation, recompute or re-measure.",
+  "libraries": {
+    "pspice/analog.olb": {
+      "R": { "1": [-0.1, 0.1], "2": [0.3, 0.1] },
+      "C": { "1": [-0.1, 0.1], "2": [0.2, 0.1] },
+      "L": { "1": [-0.1, 0.2], "2": [0.5, 0.2] }
+    },
+    "pspice/source.olb": {
+      "VDC": { "+": [0.1, 0.0], "-": [0.1, 0.4] },
+      "VAC": { "+": [0.1, 0.0], "-": [0.1, 0.4] },
+      "VSIN": { "+": [0.1, -0.1], "-": [0.1, 0.3] }
+    },
+    "pspice/breakout.olb": {
+      "MbreakN": {
+        "g": [-0.1, 0.2],
+        "d": [0.2, 0.0],
+        "s": [0.2, 0.4],
+        "b": [0.3, 0.5]
+      }
+    },
+    "capsym.olb": {
+      "0": {
+        "_note": "PlaceGround: hotspot is typically place_xy + (0.1, 0). Wire into hotspot from above (rot=0).",
+        "hotspot": [0.1, 0.0]
+      }
+    }
+  },
+  "crash_avoid": [
+    "Never source large multi-proc scripts into Capture",
+    "One Tcl statement per socket send (batch tool still sends separately)",
+    "Avoid bulk DeletePartInst; delete one object at a time",
+    "Avoid SetLocation on globals (grounds) — delete+PlaceGround instead, or fix in UI",
+    "Avoid PlacePart on marker.etc / BringToFront / Edit Select All Delete via Tcl",
+    "Fairchild 2N7000 property edits have crashed — prefer MbreakN + MODEL",
+    "Always append newline to each command"
+  ]
+}

@@ -1,0 +1,55 @@
+---
+description: OrCAD Capture Tcl + PSpice lab automation lessons and current project state
+alwaysApply: true
+---
+
+# OrCAD / PSpice automation (tcl-mcp-server)
+
+## Project paths
+- Active project: `C:\Users\lance\AppData\Roaming\SPB_Data\cdssetup\workspace\projects\orcadcpmtest\1\`
+- Design: `orcadcpmtest.dsn` — use the `\1\` folder only
+- MCP: `user-OrCAD-Capture` → `server.py` (persistent socket, `execute_tcl` / `execute_tcl_batch` / `capture_ping`)
+- Sim helpers: `sim_lib.py` (write `.sim`, `psp_cmd` run, parse `.out`/`.csd`, plot)
+- Pin offsets: `pin_offsets.json` + `placement_lib.py`
+
+## Capture Tcl — do
+- One small command at a time (or `execute_tcl_batch` with ~50–100 ms delay); always trailing `\n`
+- Wire with `GetOffsetHotSpot` ÷ 100 (inches); pin-tip to pin-tip
+- Grounds: `PlaceGround` capsym `"0"` `"0"`; place so hotspot X aligns (hs ≈ loc + 0.1"); wire **straight down from above**; rot 0
+- Prefer design-cache / known libs after warm-up place; verify with part count
+- Delete **one** `DeletePartInst` / `DeleteGlobal` / `DeleteWire` at a time
+- Create sim profiles in Capture UI (**PSpice → New Simulation Profile**), then edit `.sim` on disk — do not rely on hand-edited `.opj` GUIDs alone (invalid GUID = silent drop; Capture overwrites `.opj` on save)
+
+## Capture Tcl — don't
+- Bulk `DeletePartInst`, `Edit::Select All` + Delete, `BringToFront`
+- `PlacePart` on `marker.etc` / advanced markers via Tcl (hangs/crashes)
+- `SetLocation` on ground globals (crash)
+- Fairchild `2N7000` + `SetEffectiveProp` Reference (crash) — use `MbreakN` + MODEL `2N7000`
+- Giant `source` scripts / CorSimSrvr / ASP `orTclNewSimProfile` (needs registered client)
+- Bare `V(VOUT)` in `.PRINT`/`.PROBE` — PSpice treats as **device**; use `V([VOUT])` or numeric nodes `V(3)`
+
+## PSpice profiles
+- Register: create in UI first, then patch `.sim`
+- Headless run: `C:\Cadence\OrCADX_25.1\tools\bin\psp_cmd.exe` with absolute `.lib` paths; kill process after `JOB CONCLUDED` (may hang on Probe)
+- `sim_lib.ParametricSettings` encodes Lab5 UI parametric block
+
+## Lab status (as of last session)
+
+### Lab 2 — DONE
+- Non-inverting TL074; profile `Lab2_AC`; user places dB markers manually
+
+### Lab 8 — INTERRUPTED
+- CS amp Fig 6; preferred `MbreakN`→`2N7000`; Fairchild symbol unstable under Tcl props
+- PAGE may still have Lab5 circuit now (Lab5 built after)
+
+### Lab 5 — IN PROGRESS (voltage doubler Fig 4)
+- On PAGE1: Vi(VPULSE ±1V 1kHz), RS, CB/CL 47u, D1/D2 Dbreak→`1N6263`, RL 10k, Vin/Vout aliases, grounds
+- `1N6263.lib` in PSpice.ini
+- Profile **`SCHEMATIC1-Lab5_TRAN`** (created in UI; active): Transient **50ms**, max step **1u**
+- Parametric `@Analysis: 5`: Global param **`RS`**, fields **`100` / `1` / `10`** (→ 100, 1k, 10k). For §6.2: param **`RL`**, RS=100 fixed
+- Schematic RS must be `{RS}` for parametric to work
+- Headless proof: `...\Lab5_TRAN\Lab5_TRAN.out` + `_traces.csv` exist
+- Next: Run Lab5_TRAN in Capture; measure ripple/DC; then RL parametric sweep; optional MCP `run_sim` / `extract_sim_results` after MCP restart
+
+## Crash triggers seen
+`tex_inst` PlacePart (intermittent), bulk delete, marker library, `BringToFront`, ground `SetLocation`, Fairchild 2N7000 prop edit, `PlaceGround` right after mass ground delete
