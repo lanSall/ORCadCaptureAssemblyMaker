@@ -1,0 +1,16 @@
+* Lab 9 Fig 5 — Common-emitter amp (ECEN3314)
+* Q2N3904, VCC=5V, RC=1k, VSIN VOFF=330mV VAMP=10mV FREQ=1kHz
+*
+VCC VCC 0 5
+RC VCC VOUT 1k
+Q1 VOUT VIN 0 Q2N3904
+VIN VIN 0 SIN(0.33 0.01 1k)
+.MODEL Q2N3904 NPN(Is=6.734f Xti=3 Eg=1.11 Vaf=74.03 Bf=416.4 Ne=1.259
++ Ise=6.734f Ikf=66.78m Xtb=1.5 Br=.7371 Nc=2 Isc=0 Ikr=0 Rc=1
++ Cjc=3.638p Mjc=.3085 Vjc=.75 Fc=.5 Cje=4.493p Mje=.2593 Vje=.75
++ Tr=239.5n Tf=301.2p Itf=.4 Vtf=4 Xtf=2 Rb=10)
+.OP
+.TRAN 1u 5ms
+.PRINT TRAN V([VIN]) V([VOUT])
+.PROBE V([VIN]) V([VOUT])
+.END

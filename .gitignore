@@ -18,3 +18,7 @@ build/
 # One-off scratch helpers (leading underscore)
 labs/**/ref_schematics/_*.py
 labs/**/ref_schematics/_*.txt
+
+# Local logs
+@AutomationLog.txt
+scripts/page_dump.txt

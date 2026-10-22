@@ -1,0 +1,523 @@
+{
+  "_doc": "Lookup catalog of Capture/PSpice parts used in this project. Speeds placement by caching OLB paths, pin names, props, and crash-safe recipes. Pin geometry lives in pin_offsets.json (same lib/part keys).",
+  "page": {
+    "safe_xy_inches": [
+      0.4,
+      0.4,
+      10.5,
+      7.5
+    ],
+    "_note": "Keep PlacePart origins inside [xmin,ymin,xmax,ymax]. Lab9 parts at y>11 were invisible / off-page."
+  },
+  "mcp": {
+    "delay_ms_place": 150,
+    "delay_ms_wire": 100,
+    "delay_ms_delete": 180,
+    "batch_max_place": 2,
+    "batch_max_wire": 3,
+    "batch_max_delete": 4,
+    "save_after_moves": true,
+    "prefer_ipv6_localhost": true
+  },
+  "crash_rules": [
+    "One Tcl command per socket send (execute_tcl_batch still sends separately with delay)",
+    "Never bulk DeletePartInst / DeleteGlobal / Select-All Delete",
+    "Never DeleteGlobal in a loop after mass ground delete — Capture often crashes",
+    "Never SetLocation on ground globals",
+    "Never PlacePart marker.etc / advanced markers",
+    "Never BringToFront via Tcl",
+    "Fairchild 2N7000 prop edits crash — use MbreakN + MODEL 2N7000",
+    "PlacePart bipolar.olb Q2N3904 in large batches has crashed — place alone or reuse design-cache instance",
+    "Always Menu {File::Save} after SetLocation moves before further edits",
+    "Always trailing newline on each Tcl command",
+    "Never PlacePart VPULSE via Tcl (crashed Capture) - place VDC and patch the pulse spec into the .cir",
+    "Never SetRotation via Tcl (hangs Capture) - keep R/C horizontal and route wires",
+    "Never Menu {File::Save} inside a DeleteWire loop (crashed Capture) - save after the loop"
+  ],
+  "parts": {
+    "R": {
+      "olb": "pspice/analog.olb",
+      "symbol": "R",
+      "pins": [
+        "1",
+        "2"
+      ],
+      "props": {
+        "VALUE": "1k",
+        "Reference": "R?"
+      },
+      "use": "Horizontal resistor. Pin1 left, pin2 right at rot0. For vertical collector load, still place horizontal and wire vertically to pin tips.",
+      "safe": true
+    },
+    "C": {
+      "olb": "pspice/analog.olb",
+      "symbol": "C",
+      "pins": [
+        "1",
+        "2"
+      ],
+      "props": {
+        "VALUE": "10u"
+      },
+      "use": "Series coupling / bypass. Pin1 left, pin2 right.",
+      "safe": true
+    },
+    "L": {
+      "olb": "pspice/analog.olb",
+      "symbol": "L",
+      "pins": [
+        "1",
+        "2"
+      ],
+      "props": {
+        "VALUE": "1mH"
+      },
+      "use": "Series inductor. Longer body than R.",
+      "safe": true
+    },
+    "VDC": {
+      "olb": "pspice/source.olb",
+      "symbol": "VDC",
+      "pins": [
+        "+",
+        "-"
+      ],
+      "props": {
+        "VALUE": "5V"
+      },
+      "use": "DC supply. + at top of symbol, - below. Wire - straight down to ground hotspot.",
+      "safe": true
+    },
+    "VAC": {
+      "olb": "pspice/source.olb",
+      "symbol": "VAC",
+      "pins": [
+        "+",
+        "-"
+      ],
+      "props": {
+        "ACMAG": "1"
+      },
+      "use": "AC small-signal source for .AC sweeps. Prefer V([node]) in .PRINT/.PROBE.",
+      "safe": true
+    },
+    "VSIN": {
+      "olb": "pspice/source.olb",
+      "symbol": "VSIN",
+      "pins": [
+        "+",
+        "-"
+      ],
+      "props": {
+        "VOFF": "330mV",
+        "VAMPL": "10mV",
+        "FREQ": "1kHz"
+      },
+      "use": "Transient sine. Combines DC offset + amplitude (Lab9 base drive). Prop names VOFF/VAMPL/FREQ.",
+      "safe": true
+    },
+    "VPULSE": {
+      "olb": "pspice/source.olb",
+      "symbol": "VPULSE",
+      "pins": [
+        "+",
+        "-"
+      ],
+      "props": {
+        "V1": "-1",
+        "V2": "1",
+        "PER": "1ms"
+      },
+      "use": "Pulse source (Lab5 doubler). Confirm prop names on first place.",
+      "safe": true
+    },
+    "GND": {
+      "olb": "capsym.olb",
+      "symbol": "0",
+      "place_cmd": "PlaceGround",
+      "pins": [
+        "hotspot"
+      ],
+      "use": "Place at (desired_hs_x - 0.1, desired_hs_y). Wire ONLY straight down from above into hotspot. Never SetLocation after place.",
+      "safe": true,
+      "danger": "DeleteGlobal loops and SetLocation on grounds crash Capture"
+    },
+    "Q2N3904": {
+      "olb": "pspice/bipolar.olb",
+      "symbol": "Q2N3904",
+      "pins": [
+        "c",
+        "b",
+        "e"
+      ],
+      "model_lib": "C:/Cadence/OrCADX_25.1/tools/pspice/library/bipolar.lib",
+      "use": "NPN BJT (Lab9). Place ONE at a time. After first place, design-cache is warm. Pins: c top, b left, e bottom (rot0).",
+      "safe": "caution",
+      "danger": "Batch PlacePart of bipolar.olb has crashed sessions — use batch_max_place=1",
+      "alt": "QbreakN"
+    },
+    "QbreakN": {
+      "olb": "pspice/breakout.olb",
+      "symbol": "QbreakN",
+      "pins": [
+        "c",
+        "b",
+        "e"
+      ],
+      "props": {
+        "MODEL": "Q2N3904"
+      },
+      "use": "Generic NPN breakout. Prefer when bipolar.olb PlacePart is unstable. Set MODEL to Q2N3904; ensure bipolar.lib on sim profile.",
+      "safe": true,
+      "note": "Measure pins on first use in a session and update pin_offsets.json if they differ from Q2N3904"
+    },
+    "MbreakN": {
+      "olb": "pspice/breakout.olb",
+      "symbol": "MbreakN",
+      "pins": [
+        "g",
+        "d",
+        "s",
+        "b"
+      ],
+      "props": {
+        "MODEL": "2N7000"
+      },
+      "use": "NMOS breakout (Lab8). Prefer over Fairchild 2N7000 symbol. Set MODEL after place.",
+      "safe": true
+    },
+    "Dbreak": {
+      "olb": "pspice/breakout.olb",
+      "symbol": "Dbreak",
+      "pins": [
+        "1",
+        "2"
+      ],
+      "props": {
+        "MODEL": "D1N5231"
+      },
+      "use": "Generic diode breakout when specific OLB fails. Set MODEL to target diode.",
+      "safe": true
+    },
+    "1N4148": {
+      "olb": "pspice/1N4148.OLB",
+      "symbol": "1N4148",
+      "pins": [
+        "1",
+        "2"
+      ],
+      "use": "Lab3 signal diode. Dedicated OLB — PlacePart alone first to warm cache.",
+      "safe": true
+    },
+    "1N4007": {
+      "olb": "pspice/1N4007.olb",
+      "symbol": "1N4007",
+      "pins": [
+        "1",
+        "2"
+      ],
+      "use": "Lab3 rectifier diode.",
+      "safe": true
+    },
+    "1N5231": {
+      "olb": "pspice/1N5231.OLB",
+      "symbol": "1N5231",
+      "alt": "Dbreak+MODEL",
+      "use": "Zener. If OLB place fails, use Dbreak + MODEL D1N5231.",
+      "safe": "caution"
+    },
+    "1N6263": {
+      "olb": "pspice/1N6263.OLB",
+      "symbol": "1N6263",
+      "use": "Lab5 Schottky. Ensure .lib registered in PSpice.ini.",
+      "safe": true
+    },
+    "TL074": {
+      "olb": "pspice/tex_inst.olb",
+      "symbol": "TL074",
+      "place_part_name": "TL074/301/TI",
+      "place_device": "A",
+      "pins": [
+        "+",
+        "-",
+        "V+",
+        "V-",
+        "OUT"
+      ],
+      "model_lib": "tex_inst.lib",
+      "use": "Lab2 op-amp (section A). MUST place as TL074/301/TI with device A — bare TL074 raises ORCAP-1687 and blocks Tcl socket with a modal OK dialog.",
+      "safe": "caution",
+      "danger": "PlacePart TL074 without /301/TI or without device A → ORCAP-1687 modal that freezes port 9020 until OK is clicked"
+    },
+    "TL081": {
+      "olb": "pspice/tex_inst.olb",
+      "symbol": "TL081",
+      "place_part_name": "TL081/301/TI",
+      "place_device": "",
+      "pins": [
+        "+",
+        "-",
+        "V+",
+        "V-",
+        "OUT",
+        "N1",
+        "N2"
+      ],
+      "model_lib": "tex_inst.lib",
+      "use": "Single BiFET op-amp (ECEN 4013 Bessel LPF homework). Place as TL081/301/TI with empty device. Leave N1/N2 (offset null) open.",
+      "safe": "caution",
+      "danger": "Do not route wires along the OUT x-column — N1 and N2 share that X. tex_inst PlacePart: save after every place."
+    }
+  },
+  "recipes": {
+    "bessel_lpf_n5": {
+      "title": "ECEN 4013 Wk2 N=5 Bessel LPF fc=3 kHz (TL081 Sallen-Key)",
+      "parts": [
+        "TL081",
+        "VAC",
+        "R",
+        "C",
+        "VDC",
+        "GND"
+      ],
+      "defaults": {
+        "R1": {
+          "VALUE": "24.9k"
+        },
+        "R2": {
+          "VALUE": "24.9k"
+        },
+        "R3": {
+          "VALUE": "24.3k"
+        },
+        "R4": {
+          "VALUE": "24.3k"
+        },
+        "R5": {
+          "VALUE": "24.3k"
+        },
+        "C1": {
+          "VALUE": "2.2n"
+        },
+        "C2A": {
+          "VALUE": "270p"
+        },
+        "C2B": {
+          "VALUE": "330p"
+        },
+        "C3A": {
+          "VALUE": "1.5n"
+        },
+        "C3B": {
+          "VALUE": "390p"
+        },
+        "C4": {
+          "VALUE": "2.2n"
+        },
+        "C5": {
+          "VALUE": "680p"
+        },
+        "VDD": {
+          "VALUE": "15Vdc"
+        },
+        "VSS": {
+          "VALUE": "15Vdc"
+        }
+      },
+      "sim": "AC DEC 10 10 100k",
+      "builder": "scripts/hw_bessel_lpf.py",
+      "note": "Unity-gain 2nd-order SK + 3rd-order VCVS. Leave TL081 N1/N2 open."
+    },
+    "lab2_noninv": {
+      "title": "Lab2 §6.1 non-inverting TL074 (Fig 8a / Fig 6)",
+      "parts": [
+        "TL074",
+        "VAC",
+        "R",
+        "VDC",
+        "GND"
+      ],
+      "defaults": {
+        "R1": {
+          "VALUE": "1k"
+        },
+        "R2": {
+          "VALUE": "9k"
+        },
+        "RL": {
+          "VALUE": "1Meg"
+        },
+        "VAC": {
+          "ACMAG": "1",
+          "DC": "0"
+        },
+        "VDD": {
+          "VALUE": "15V"
+        },
+        "VSS": {
+          "VALUE": "15V"
+        }
+      },
+      "sim": "AC DEC 10 1 100Meg",
+      "builder": "scripts/lab2_place.py"
+    },
+    "lab2_inv": {
+      "title": "Lab2 §6.2 inverting TL074 (Fig 8b)",
+      "parts": [
+        "TL074",
+        "VAC",
+        "R",
+        "VDC",
+        "GND"
+      ],
+      "defaults": {
+        "R3": {
+          "VALUE": "1k"
+        },
+        "R4": {
+          "VALUE": "20k"
+        },
+        "RL": {
+          "VALUE": "1Meg"
+        }
+      },
+      "sim": "AC DEC 10 1 100Meg",
+      "builder": "scripts/lab2_place.py"
+    },
+    "ce_amp_fig5": {
+      "title": "Lab9 Fig5 common-emitter (sim schematic)",
+      "parts": [
+        "VSIN",
+        "Q2N3904",
+        "R",
+        "VDC",
+        "GND"
+      ],
+      "defaults": {
+        "VSIN": {
+          "VOFF": "330mV",
+          "VAMPL": "10mV",
+          "FREQ": "1kHz"
+        },
+        "R": {
+          "VALUE": "1k",
+          "Reference": "RC"
+        },
+        "VDC": {
+          "VALUE": "5V",
+          "Reference": "VCC"
+        },
+        "Q2N3904": {
+          "Reference": "Q1"
+        }
+      },
+      "layout_origin": [
+        1.2,
+        1.7
+      ],
+      "layout": {
+        "VIN": [
+          0.0,
+          1.3
+        ],
+        "Q1": [
+          2.0,
+          1.3
+        ],
+        "RC": [
+          1.8,
+          0.1
+        ],
+        "VCC": [
+          3.3,
+          0.0
+        ]
+      },
+      "nets": [
+        "VIN",
+        "VOUT",
+        "VCC"
+      ],
+      "wiring": "VSIN+→Q.b; Q.c→RC.2 vertical; RC.1→VCC+; VSIN-/Q.e/VCC- → GND down"
+    },
+    "ce_amp_fig6_load": {
+      "title": "Lab9 Fig6 CE + AC-coupled load",
+      "extends": "ce_amp_fig5",
+      "extra_parts": [
+        "C",
+        "R"
+      ],
+      "defaults": {
+        "C": {
+          "VALUE": "10u",
+          "Reference": "C1"
+        },
+        "R_load": {
+          "VALUE": "10k",
+          "Reference": "RL"
+        }
+      },
+      "wiring_extra": "Q.c→C.1; C.2→RL.1; RL.2→GND"
+    },
+    "series_rlc_ac": {
+      "title": "Series R–L–C driven by VAC",
+      "parts": [
+        "VAC",
+        "R",
+        "L",
+        "C",
+        "GND"
+      ],
+      "builder": "placement_lib.build_series_rlc"
+    },
+    "lab8_cs_amp_fig6": {
+      "title": "Lab8 Fig6 common-source amp (2N7000)",
+      "parts": [
+        "VSIN",
+        "MbreakN",
+        "R",
+        "C",
+        "VDC",
+        "GND"
+      ],
+      "defaults": {
+        "VGG": {
+          "VOFF": "2.8",
+          "VAMPL": "0.1",
+          "FREQ": "1kHz",
+          "ACMAG": "1"
+        },
+        "VDD": {
+          "VALUE": "10Vdc",
+          "DC": "10Vdc"
+        },
+        "RD": {
+          "VALUE": "330"
+        },
+        "C1": {
+          "VALUE": "47u"
+        },
+        "RL": {
+          "VALUE": "10k"
+        },
+        "M1": {
+          "MODEL": "2N7000"
+        }
+      },
+      "layout_origin": [
+        1.2,
+        1.8
+      ],
+      "sim": "AC DEC 10 1 100Meg",
+      "builder": "scripts/lab8_place.py",
+      "note": "Tie MbreakN bulk to source; never Fairchild 2N7000 + Reference prop edits"
+    }
+  },
+  "tcl_snippets": {
+    "list_parts": "set lStatus [DboState]; set lNullObj NULL; set lPage [GetActivePage]; set out {}; set lIter [$lPage NewPartInstsIter $lStatus]; set lInst [$lIter NextPartInst $lStatus]; while {$lInst != $lNullObj} { set ref [DboTclHelper_sMakeCString]; $lInst GetReference $ref; set loc [$lInst GetLocation $lStatus]; set ox [expr {[DboTclHelper_sGetCPointX $loc]/100.0}]; set oy [expr {[DboTclHelper_sGetCPointY $loc]/100.0}]; lappend out \"[DboTclHelper_sGetConstCharPtr $ref]@$ox,$oy\"; set lInst [$lIter NextPartInst $lStatus] }; delete_DboPagePartInstsIter $lIter; return [join $out { | }]",
+    "delete_one_part": "set lStatus [DboState]; set lNullObj NULL; set lPage [GetActivePage]; set lIter [$lPage NewPartInstsIter $lStatus]; set victim NULL; set lInst [$lIter NextPartInst $lStatus]; while {$lInst != $lNullObj} { set victim $lInst; set lInst [$lIter NextPartInst $lStatus]}; delete_DboPagePartInstsIter $lIter; if {$victim != $lNullObj} { $lPage DeletePartInst $victim; return deleted } else { return none }",
+    "delete_one_wire": "set lStatus [DboState]; set lNullObj NULL; set lPage [GetActivePage]; set wIter [$lPage NewWiresIter $lStatus]; set w [$wIter NextWire $lStatus]; delete_DboPageWiresIter $wIter; if {$w != $lNullObj} { $lPage DeleteWire $w; return dw } else { return none }",
+    "save": "Menu {File::Save}",
+    "activate_check": "IsSchematicViewActive"
+  }
+}

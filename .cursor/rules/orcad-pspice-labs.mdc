@@ -1,56 +1,45 @@
 ---
-description: OrCAD Capture Tcl + PSpice lab automation lessons and current project state
+description: OrCAD Capture Tcl + PSpice automation rules for tcl-mcp-server (crash triggers, placement, wiring, simulation)
 alwaysApply: true
 ---
 
-# OrCAD / PSpice automation (tcl-mcp-server)
+# OrCAD Capture / PSpice automation
 
-## Project paths
-- Active project: `C:\Users\lance\AppData\Roaming\SPB_Data\cdssetup\workspace\projects\orcadcpmtest\1\`
-- Design: `orcadcpmtest.dsn` — use the `\1\` folder only
-- MCP: `user-OrCAD-Capture` → `server.py`; MATLAB → `matlab_mcp.py`
-- Sim helpers: `sim_lib.py` (write `.sim`, `psp_cmd` run, parse `.out`/`.csd`, plot)
-- Pin offsets: `pin_offsets.json` + `placement_lib.py`
-- Labs / results: `labs/labN_pages`, `labs/lab3_results/`; scripts in `scripts/`
+## Before touching Capture
+- Confirm the active design first; it changes between jobs (`orcadcpmtest\1\`, `joeldesign`, ...). Run `python scripts/query_capture.py` (page, design, part count). Projects live under `%APPDATA%\SPB_Data\cdssetup\workspace\projects\`.
+- Resuming a lab or homework circuit? Read `labs/STATUS.md` for what is already on the page.
+- Look up every part in `parts_catalog.json` (`describe_part('VSIN')`) and reuse `placement_lib` recipes and pin offsets from `pin_offsets.json`. Don't rediscover OLB paths.
+- If port 9020 stops answering, run `python scripts/restart_capture.py` (relaunches Capture and waits for the port).
+- Send any Tcl containing `$` through the Python helpers (`dump_page.tcl`), not PowerShell, which eats `$vars`.
 
-## Capture Tcl — do
-- One small command at a time (or `execute_tcl_batch` with ~50–100 ms delay); always trailing `\n`
-- Wire with `GetOffsetHotSpot` ÷ 100 (inches); pin-tip to pin-tip
-- Grounds: `PlaceGround` capsym `"0"` `"0"`; place so hotspot X aligns (hs ≈ loc + 0.1"); wire **straight down from above**; rot 0
-- Prefer design-cache / known libs after warm-up place; verify with part count
-- Delete **one** `DeletePartInst` / `DeleteGlobal` / `DeleteWire` at a time
-- Create sim profiles in Capture UI (**PSpice → New Simulation Profile**), then edit `.sim` on disk — do not rely on hand-edited `.opj` GUIDs alone (invalid GUID = silent drop; Capture overwrites `.opj` on save)
+## Crash-safe sending
+- One Tcl command per send, trailing `\n`; batches: PlacePart ≤2 (BJT 1), PlaceWire ≤3, Delete ≤4, with catalog delays (~100–180 ms).
+- Order: one PlacePart → `Menu {File::Save}` → next part; then grounds; then wires (`send_all` in `hw_bessel_lpf.py` / `lab2_place.py` is the reference).
+- Delete one `DeletePartInst` / `DeleteWire` / `DeleteGlobal` at a time with a pause, and do **not** save mid delete-loop.
+- Keep origins inside `page.safe_xy_inches` (~0.4–10.5 × 0.4–7.5"); off-page parts are invisible.
 
-## Capture Tcl — don't
-- Bulk `DeletePartInst`, `Edit::Select All` + Delete, `BringToFront`
-- `PlacePart` on `marker.etc` / advanced markers via Tcl (hangs/crashes)
-- `SetLocation` on ground globals (crash)
-- Fairchild `2N7000` + `SetEffectiveProp` Reference (crash) — use `MbreakN` + MODEL `2N7000`
-- Giant `source` scripts / CorSimSrvr / ASP `orTclNewSimProfile` (needs registered client)
-- Bare `V(VOUT)` in `.PRINT`/`.PROBE` — PSpice treats as **device**; use `V([VOUT])` or numeric nodes `V(3)`
+## Never via Tcl (crash or hang)
+- Bulk delete, `Edit::Select All` + Delete, `DeleteGlobal` loops, `BringToFront`
+- `SetRotation` (hangs); place R/C horizontal and route wires instead
+- `SetLocation` on grounds/globals
+- `PlacePart` of `marker.etc` / advanced markers; add markers manually
+- `VPULSE` placement; place `VDC` and patch the pulse spec into the `.cir`
+- Fairchild `2N7000` prop edits; use `MbreakN` + MODEL `2N7000`
+- `tex_inst.olb` bare `TL074` (ORCAP-1687 modal blocks port 9020); use `"TL074/301/TI" "A"`, dismiss modal via `lab2_try_tl074.py`
+- Giant `source` scripts, CorSimSrvr / `orTclNewSimProfile`
 
-## PSpice profiles
-- Register: create in UI first, then patch `.sim`
-- Headless run: `C:\Cadence\OrCADX_25.1\tools\bin\psp_cmd.exe` with absolute `.lib` paths; kill process after `JOB CONCLUDED` (may hang on Probe)
-- `sim_lib.ParametricSettings` encodes Lab5 UI parametric block
+## Wiring
+- Wire pin tip to pin tip using cached offsets. A wire that passes **through** another pin hotspot connects to it.
+- Never run vertically along an op-amp OUT column or through the other terminal of a source; give parallel caps separate drops.
+- Grounds: `PlaceGround` capsym `"0"` `"0"`, hotspot X aligned, wire straight down from above.
+- `PlaceNetAlias` must land exactly on a wire segment.
+- VDC: set both `DC` and `VALUE` (`15Vdc`), or the netlist emits `0Vdc`.
 
-## Lab status (as of last session)
+## Simulation
+- Create profiles in the Capture UI (PSpice → New Simulation Profile), then patch the `.sim` on disk (`sim_lib`). Hand-edited `.opj` GUIDs are silently dropped.
+- Netlist: `Menu {PSpice::Create Netlist}`. Headless: `C:\Cadence\OrCADX_25.1\tools\bin\psp_cmd.exe` with absolute `.lib` paths; kill it after `JOB CONCLUDED`.
+- In `.PRINT`/`.PROBE` use `V([VOUT])` or numeric nodes; bare `V(VOUT)` is read as a device.
+- Post-process with the MATLAB MCP (`load_pspice_csv`) or `sim_lib` plots. For quick standalone checks of a topology, the LTspice MCP is faster than building in Capture.
 
-### Lab 2 — DONE
-- Non-inverting TL074; profile `Lab2_AC`; user places dB markers manually
-
-### Lab 8 — INTERRUPTED
-- CS amp Fig 6; preferred `MbreakN`→`2N7000`; Fairchild symbol unstable under Tcl props
-- PAGE may still have Lab5 circuit now (Lab5 built after)
-
-### Lab 5 — IN PROGRESS (voltage doubler Fig 4)
-- On PAGE1: Vi(VPULSE ±1V 1kHz), RS, CB/CL 47u, D1/D2 Dbreak→`1N6263`, RL 10k, Vin/Vout aliases, grounds
-- `1N6263.lib` in PSpice.ini
-- Profile **`SCHEMATIC1-Lab5_TRAN`** (created in UI; active): Transient **50ms**, max step **1u**
-- Parametric `@Analysis: 5`: Global param **`RS`**, fields **`100` / `1` / `10`** (→ 100, 1k, 10k). For §6.2: param **`RL`**, RS=100 fixed
-- Schematic RS must be `{RS}` for parametric to work
-- Headless proof: `...\Lab5_TRAN\Lab5_TRAN.out` + `_traces.csv` exist
-- Next: Run Lab5_TRAN in Capture; measure ripple/DC; then RL parametric sweep; optional MCP `run_sim` / `extract_sim_results` after MCP restart
-
-## Crash triggers seen
-`tex_inst` PlacePart (intermittent), bulk delete, marker library, `BringToFront`, ground `SetLocation`, Fairchild 2N7000 prop edit, `PlaceGround` right after mass ground delete
+## After finishing a circuit
+Update `labs/STATUS.md` (what's on which page, profile names, results paths) and add any new crash trigger to this rule and `parts_catalog.json` → `crash_rules`.

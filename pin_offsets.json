@@ -2,37 +2,206 @@
   "_doc": "Pin hotspot offsets in inches relative to PlacePart origin (rot=0, mirror=0). Wire tip = origin + offset. After SetRotation, recompute or re-measure.",
   "libraries": {
     "pspice/analog.olb": {
-      "R": { "1": [-0.1, 0.1], "2": [0.3, 0.1] },
-      "C": { "1": [-0.1, 0.1], "2": [0.2, 0.1] },
-      "L": { "1": [-0.1, 0.2], "2": [0.5, 0.2] }
+      "R": {
+        "1": [
+          -0.1,
+          0.1
+        ],
+        "2": [
+          0.3,
+          0.1
+        ]
+      },
+      "C": {
+        "1": [
+          -0.1,
+          0.1
+        ],
+        "2": [
+          0.2,
+          0.1
+        ]
+      },
+      "L": {
+        "1": [
+          -0.1,
+          0.2
+        ],
+        "2": [
+          0.5,
+          0.2
+        ]
+      }
     },
     "pspice/source.olb": {
-      "VDC": { "+": [0.1, 0.0], "-": [0.1, 0.4] },
-      "VAC": { "+": [0.1, -0.1], "-": [0.1, 0.3] },
-      "VSIN": { "+": [0.1, -0.1], "-": [0.1, 0.3] }
+      "VDC": {
+        "+": [
+          0.1,
+          0.0
+        ],
+        "-": [
+          0.1,
+          0.4
+        ]
+      },
+      "VAC": {
+        "+": [
+          0.1,
+          -0.1
+        ],
+        "-": [
+          0.1,
+          0.3
+        ]
+      },
+      "VSIN": {
+        "+": [
+          0.1,
+          -0.1
+        ],
+        "-": [
+          0.1,
+          0.3
+        ]
+      }
+    },
+    "pspice/tex_inst.olb": {
+      "TL074": {
+        "_note": "Section A (device A). Place as PlacePart ... \"TL074/301/TI\" \"A\" FALSE. Bare TL074 fails ORCAP-1687.",
+        "+": [
+          -0.1,
+          0.1
+        ],
+        "-": [
+          -0.1,
+          0.5
+        ],
+        "V+": [
+          0.3,
+          0.0
+        ],
+        "V-": [
+          0.3,
+          0.6
+        ],
+        "OUT": [
+          0.7,
+          0.3
+        ]
+      },
+      "TL081": {
+        "_note": "Single op-amp. Place as PlacePart ... \"TL081/301/TI\" \"\" FALSE. N1/N2 are offset-null pins — leave open; do not route along the OUT x-column.",
+        "+": [
+          -0.1,
+          0.1
+        ],
+        "-": [
+          -0.1,
+          0.5
+        ],
+        "V+": [
+          0.3,
+          0.0
+        ],
+        "V-": [
+          0.3,
+          0.6
+        ],
+        "OUT": [
+          0.7,
+          0.3
+        ],
+        "N1": [
+          0.7,
+          0.1
+        ],
+        "N2": [
+          0.7,
+          0.5
+        ]
+      }
+    },
+    "pspice/bipolar.olb": {
+      "Q2N3904": {
+        "b": [
+          -0.1,
+          0.1
+        ],
+        "c": [
+          0.1,
+          -0.1
+        ],
+        "e": [
+          0.1,
+          0.3
+        ]
+      }
     },
     "pspice/breakout.olb": {
+      "QbreakN": {
+        "_note": "Assumed same as Q2N3904 until re-measured; update after first place if wiring misses.",
+        "b": [
+          -0.1,
+          0.1
+        ],
+        "c": [
+          0.1,
+          -0.1
+        ],
+        "e": [
+          0.1,
+          0.3
+        ]
+      },
       "MbreakN": {
-        "g": [-0.1, 0.2],
-        "d": [0.2, 0.0],
-        "s": [0.2, 0.4],
-        "b": [0.3, 0.5]
+        "g": [
+          -0.1,
+          0.2
+        ],
+        "d": [
+          0.2,
+          0.0
+        ],
+        "s": [
+          0.2,
+          0.4
+        ],
+        "b": [
+          0.3,
+          0.5
+        ]
+      },
+      "Dbreak": {
+        "1": [
+          -0.1,
+          0.1
+        ],
+        "2": [
+          0.2,
+          0.1
+        ]
       }
     },
     "capsym.olb": {
       "0": {
         "_note": "PlaceGround: hotspot is typically place_xy + (0.1, 0). Wire into hotspot from above (rot=0).",
-        "hotspot": [0.1, 0.0]
+        "hotspot": [
+          0.1,
+          0.0
+        ]
       }
     }
   },
   "crash_avoid": [
+    "See parts_catalog.json crash_rules + mcp batch limits for current guidance",
     "Never source large multi-proc scripts into Capture",
     "One Tcl statement per socket send (batch tool still sends separately)",
     "Avoid bulk DeletePartInst; delete one object at a time",
-    "Avoid SetLocation on globals (grounds) — delete+PlaceGround instead, or fix in UI",
+    "Avoid SetLocation on globals (grounds) \u2014 delete+PlaceGround instead, or fix in UI",
     "Avoid PlacePart on marker.etc / BringToFront / Edit Select All Delete via Tcl",
-    "Fairchild 2N7000 property edits have crashed — prefer MbreakN + MODEL",
+    "Fairchild 2N7000 property edits have crashed \u2014 prefer MbreakN + MODEL",
+    "Keep PlacePart origins inside parts_catalog.json page.safe_xy_inches",
+    "Menu {File::Save} after SetLocation moves",
     "Always append newline to each command"
   ]
 }
